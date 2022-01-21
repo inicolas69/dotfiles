@@ -11,13 +11,13 @@
 
 [core]
   pager = less -FRSX
-	editor = '/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl' -n -w
+	editor = code --wait
 
 [alias]
   co = checkout
   st = status -sb
   br = branch
-  ci = commit
+  ci = commit -m
   fo = fetch origin
   d = !git --no-pager diff
   dt  = difftool
@@ -37,6 +37,7 @@
 
   # Removes a file from the index
   unstage = reset HEAD --
+	uncommit = reset --soft HEAD^
 
 [help]
   autocorrect = 1
