@@ -1,22 +1,36 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-echo "🚀 Installing dotfiles..."
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Homebrew
+echo "🚀 Installing dotfiles from: $DOTFILES_DIR"
+
+# 1) Command Line Tools (git/make…)
+if ! xcode-select -p >/dev/null 2>&1; then
+  echo "❌ Xcode Command Line Tools manquants."
+  echo "➡️ Lance: xcode-select --install"
+  echo "Puis relance: $DOTFILES_DIR/install.sh"
+  exit 1
+fi
+
+# 2) Homebrew
 if ! command -v brew >/dev/null 2>&1; then
   echo "🍺 Installing Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  # shellenv pour que brew soit dispo dans CE shell
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
 fi
 
-echo "📦 Installing Homebrew packages..."
-brew bundle --file="$HOME/dotfiles/Brewfile"
+# 3) Make
+if ! command -v make >/dev/null 2>&1; then
+  echo "❌ 'make' introuvable (bizarre si CLT installés)."
+  exit 1
+fi
 
-echo "🔗 Creating symlinks..."
-
-ln -sf "$HOME/dotfiles/zsh/.zshrc" "$HOME/.zshrc"
-ln -sf "$HOME/dotfiles/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
-ln -sf "$HOME/dotfiles/zsh/.aliases" "$HOME/.aliases"
-ln -sf "$HOME/dotfiles/git/.gitconfig" "$HOME/.gitconfig"
-
-echo "✅ Done. Restart your terminal."
+# 4) Appel du Makefile (orchestrateur)
+make -C "$DOTFILES_DIR" install
